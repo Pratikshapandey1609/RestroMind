@@ -1,7 +1,7 @@
 # RestroMind — Restaurant Management Platform
 
 > **Internship Project**
-> **Company:** GravatonWeb Technology
+> **Company:** InnovexWeb Technology
 > **Role:** Full-Stack Developer Intern
 > **Project:** RestroMind — Full-Stack Restaurant Management Platform
 > **Tech Stack:** Java 23 · Spring Boot 3.3 · PostgreSQL · JWT · React Native · Maven · Flyway · Spring Cloud Gateway
@@ -157,4 +157,4 @@ jwt:
 
 ## License
 
-This project is developed as part of an internship at **GravatonWeb Technology**.
+This project is developed as part of an internship at ** InnovexWeb Technology**.
