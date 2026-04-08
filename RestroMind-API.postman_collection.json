@@ -1,0 +1,684 @@
+{
+  "info": {
+    "name": "RestroMind API",
+    "description": "Complete API collection for RestroMind monolithic application. Base URL: http://localhost:8080\n\nFlow:\n1. Register as ADMIN → POST /auth/register\n2. Login → POST /auth/login (token auto-saved)\n3. Onboarding steps 1→2→3 to create a restaurant\n4. Create categories and dishes under Menu Management\n5. Discovery and Menu public APIs need no token",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@restromind.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Admin User\",\n  \"role\": \"ADMIN\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register (USER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@restromind.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Regular User\",\n  \"role\": \"USER\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('token', json.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@restromind.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth", "refresh"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurant — Onboarding (ADMIN)",
+      "description": "Must be logged in as ADMIN. Run steps 1 → 2 → 3 in order.",
+      "item": [
+        {
+          "name": "Step 1 — Name & Logo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/restaurants/onboarding/step1", "host": ["{{baseUrl}}"], "path": ["restaurants", "onboarding", "step1"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza Palace\",\n  \"logoUrl\": \"https://example.com/logo.png\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Step 2 — Cuisine & Description",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/restaurants/onboarding/step2", "host": ["{{baseUrl}}"], "path": ["restaurants", "onboarding", "step2"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cuisineType\": \"ITALIAN\",\n  \"description\": \"Authentic Italian pizza and pasta since 1990.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Step 3 — Address, Hours & Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/restaurants/onboarding/step3", "host": ["{{baseUrl}}"], "path": ["restaurants", "onboarding", "step3"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressLine1\": \"123 Main Street\",\n  \"addressLine2\": \"Ground Floor\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"postalCode\": \"400001\",\n  \"country\": \"India\",\n  \"phone\": \"9876543210\",\n  \"latitude\": 19.0760,\n  \"longitude\": 72.8777,\n  \"estimatedDeliveryTime\": 30,\n  \"operatingHours\": [\n    { \"dayOfWeek\": \"MONDAY\",    \"openTime\": \"09:00\", \"closeTime\": \"22:00\" },\n    { \"dayOfWeek\": \"TUESDAY\",   \"openTime\": \"09:00\", \"closeTime\": \"22:00\" },\n    { \"dayOfWeek\": \"WEDNESDAY\", \"openTime\": \"09:00\", \"closeTime\": \"22:00\" },\n    { \"dayOfWeek\": \"THURSDAY\",  \"openTime\": \"09:00\", \"closeTime\": \"22:00\" },\n    { \"dayOfWeek\": \"FRIDAY\",    \"openTime\": \"09:00\", \"closeTime\": \"23:00\" },\n    { \"dayOfWeek\": \"SATURDAY\",  \"openTime\": \"10:00\", \"closeTime\": \"23:00\" },\n    { \"dayOfWeek\": \"SUNDAY\",    \"openTime\": \"10:00\", \"closeTime\": \"21:00\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Onboarding Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/restaurants/onboarding/status", "host": ["{{baseUrl}}"], "path": ["restaurants", "onboarding", "status"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurant — Profile (ADMIN)",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/restaurants/me", "host": ["{{baseUrl}}"], "path": ["restaurants", "me"] }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/restaurants/me", "host": ["{{baseUrl}}"], "path": ["restaurants", "me"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza Palace Updated\",\n  \"logoUrl\": \"https://example.com/new-logo.png\",\n  \"description\": \"Updated description.\",\n  \"cuisineType\": \"ITALIAN\",\n  \"addressLine1\": \"456 New Street\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"postalCode\": \"400002\",\n  \"country\": \"India\",\n  \"phone\": \"9876543210\",\n  \"latitude\": 19.0760,\n  \"longitude\": 72.8777,\n  \"estimatedDeliveryTime\": 25,\n  \"operatingHours\": [\n    { \"dayOfWeek\": \"MONDAY\", \"openTime\": \"10:00\", \"closeTime\": \"22:00\" },\n    { \"dayOfWeek\": \"FRIDAY\", \"openTime\": \"10:00\", \"closeTime\": \"23:00\" }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Set Status → OPEN",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/restaurants/me/status", "host": ["{{baseUrl}}"], "path": ["restaurants", "me", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"OPEN\"\n}" }
+          }
+        },
+        {
+          "name": "Set Status → CLOSED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/restaurants/me/status", "host": ["{{baseUrl}}"], "path": ["restaurants", "me", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CLOSED\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurant — Discovery (Public)",
+      "description": "No authentication required.",
+      "item": [
+        {
+          "name": "List All Available Restaurants",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/restaurants", "host": ["{{baseUrl}}"], "path": ["restaurants"] }
+          }
+        },
+        {
+          "name": "List — Filter by Cuisine",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?cuisineType=ITALIAN",
+              "host": ["{{baseUrl}}"], "path": ["restaurants"],
+              "query": [{ "key": "cuisineType", "value": "ITALIAN" }]
+            }
+          }
+        },
+        {
+          "name": "List — Sort by Rating",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?sortBy=rating",
+              "host": ["{{baseUrl}}"], "path": ["restaurants"],
+              "query": [{ "key": "sortBy", "value": "rating" }]
+            }
+          }
+        },
+        {
+          "name": "List — Sort by Delivery Time",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?sortBy=deliveryTime",
+              "host": ["{{baseUrl}}"], "path": ["restaurants"],
+              "query": [{ "key": "sortBy", "value": "deliveryTime" }]
+            }
+          }
+        },
+        {
+          "name": "List — Sort by Distance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?sortBy=distance&latitude=19.0760&longitude=72.8777",
+              "host": ["{{baseUrl}}"], "path": ["restaurants"],
+              "query": [
+                { "key": "sortBy", "value": "distance" },
+                { "key": "latitude", "value": "19.0760" },
+                { "key": "longitude", "value": "72.8777" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List — Paginated (page 0, size 5)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants?page=0&size=5",
+              "host": ["{{baseUrl}}"], "path": ["restaurants"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search by Name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/restaurants/search?query=pizza",
+              "host": ["{{baseUrl}}"], "path": ["restaurants", "search"],
+              "query": [{ "key": "query", "value": "pizza" }]
+            }
+          }
+        },
+        {
+          "name": "Get Restaurant by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/restaurants/1", "host": ["{{baseUrl}}"], "path": ["restaurants", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menu — Public",
+      "description": "No authentication required.",
+      "item": [
+        {
+          "name": "Get Restaurant Menu",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1"] }
+          }
+        },
+        {
+          "name": "Get Dish by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/menu/dishes/1", "host": ["{{baseUrl}}"], "path": ["menu", "dishes", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menu — Management (ADMIN)",
+      "description": "Requires ADMIN JWT. Replace restaurantId/categoryId/dishId as needed.",
+      "item": [
+        {
+          "name": "Get Full Menu (Admin View, incl. unavailable)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/admin", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "admin"] }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/categories", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "categories"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Starters\",\n  \"sortIndex\": 0\n}" }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/categories/1", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "categories", "1"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Appetizers\",\n  \"sortIndex\": 0\n}" }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/categories/1", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "categories", "1"] }
+          }
+        },
+        {
+          "name": "Add Dish to Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/categories/1/dishes", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "categories", "1", "dishes"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Margherita Pizza\",\n  \"description\": \"Classic tomato and mozzarella\",\n  \"price\": 299.00,\n  \"imageUrl\": \"https://example.com/margherita.jpg\",\n  \"allergens\": \"Gluten, Dairy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Dish",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/dishes/1", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "dishes", "1"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Margherita Pizza (Large)\",\n  \"description\": \"Classic tomato and mozzarella - large size\",\n  \"price\": 399.00,\n  \"imageUrl\": \"https://example.com/margherita.jpg\",\n  \"allergens\": \"Gluten, Dairy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Toggle Dish Availability — Unavailable",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/dishes/1/availability", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "dishes", "1", "availability"] },
+            "body": { "mode": "raw", "raw": "{\n  \"available\": false\n}" }
+          }
+        },
+        {
+          "name": "Toggle Dish Availability — Available",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/dishes/1/availability", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "dishes", "1", "availability"] },
+            "body": { "mode": "raw", "raw": "{\n  \"available\": true\n}" }
+          }
+        },
+        {
+          "name": "Delete Dish (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/menu/restaurants/1/dishes/1", "host": ["{{baseUrl}}"], "path": ["menu", "restaurants", "1", "dishes", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "Requires JWT. Users place orders; admins manage status.",
+      "item": [
+        {
+          "name": "Place Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantId\": 1,\n  \"items\": [\n    { \"dishId\": 1, \"quantity\": 2 }\n  ],\n  \"deliveryAddress\": \"456 Customer St, Mumbai\",\n  \"specialInstructions\": \"Extra spicy\"\n}"
+            }
+          }
+        },
+        {
+          "name": "My Orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/me", "host": ["{{baseUrl}}"], "path": ["orders", "me"] }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/1", "host": ["{{baseUrl}}"], "path": ["orders", "1"] }
+          }
+        },
+        {
+          "name": "Restaurant Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/restaurant/1?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["orders", "restaurant", "1"], "query": [{"key":"page","value":"0"},{"key":"size","value":"20"}] }
+          }
+        },
+        {
+          "name": "Confirm Order (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/orders/1/status", "host": ["{{baseUrl}}"], "path": ["orders", "1", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONFIRMED\"\n}" }
+          }
+        },
+        {
+          "name": "Advance to PREPARING (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/orders/1/status", "host": ["{{baseUrl}}"], "path": ["orders", "1", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"PREPARING\"\n}" }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/orders/1/status", "host": ["{{baseUrl}}"], "path": ["orders", "1", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"CANCELLED\",\n  \"cancellationReason\": \"Changed my mind\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Requires JWT. Users manage preferences and view history. /send is called internally.",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/me?page=0&size=20",
+              "host": ["{{baseUrl}}"], "path": ["notifications", "me"],
+              "query": [{ "key": "page", "value": "0" }, { "key": "size", "value": "20" }]
+            }
+          }
+        },
+        {
+          "name": "Get My Preferences",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/notifications/preferences", "host": ["{{baseUrl}}"], "path": ["notifications", "preferences"] }
+          }
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/notifications/preferences", "host": ["{{baseUrl}}"], "path": ["notifications", "preferences"] },
+            "body": { "mode": "raw", "raw": "{\n  \"pushEnabled\": true,\n  \"emailEnabled\": false,\n  \"inAppEnabled\": true\n}" }
+          }
+        },
+        {
+          "name": "Send Notification (Internal)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/notifications/send", "host": ["{{baseUrl}}"], "path": ["notifications", "send"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"userId\": 1,\n  \"channel\": \"IN_APP\",\n  \"title\": \"Test Notification\",\n  \"body\": \"This is a test notification\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "description": "Requires JWT. Works for both ADMIN and USER roles.",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
+            "body": { "mode": "raw", "raw": "{\n  \"displayName\": \"Pratiksha\",\n  \"phone\": \"9876543210\",\n  \"profilePhoto\": \"https://example.com/photo.jpg\"\n}" }
+          }
+        },
+        {
+          "name": "Get My Addresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/users/me/addresses", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses"] }
+          }
+        },
+        {
+          "name": "Add Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/users/me/addresses", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses"] },
+            "body": { "mode": "raw", "raw": "{\n  \"label\": \"Home\",\n  \"address\": \"123 Main Street, Andheri West\",\n  \"city\": \"Mumbai\",\n  \"isDefault\": true\n}" }
+          }
+        },
+        {
+          "name": "Set Address as Default",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/users/me/addresses/1/default", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses", "1", "default"] }
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/users/me/addresses/1", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics (ADMIN)",
+      "description": "Requires ADMIN JWT. Replace restaurantId as needed.",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/analytics/restaurants/1/dashboard", "host": ["{{baseUrl}}"], "path": ["analytics", "restaurants", "1", "dashboard"] }
+          }
+        },
+        {
+          "name": "Revenue Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/restaurants/1/revenue?from=2026-04-01&to=2026-04-07",
+              "host": ["{{baseUrl}}"], "path": ["analytics", "restaurants", "1", "revenue"],
+              "query": [{ "key": "from", "value": "2026-04-01" }, { "key": "to", "value": "2026-04-07" }]
+            }
+          }
+        },
+        {
+          "name": "Top Dishes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/analytics/restaurants/1/top-dishes?from=2026-04-01&to=2026-04-07&limit=10",
+              "host": ["{{baseUrl}}"], "path": ["analytics", "restaurants", "1", "top-dishes"],
+              "query": [
+                { "key": "from", "value": "2026-04-01" },
+                { "key": "to", "value": "2026-04-07" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurant — Internal",
+      "description": "Service-to-service endpoints. Require authentication.",
+      "item": [
+        {
+          "name": "Get Internal Restaurant Info",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/restaurants/1/internal", "host": ["{{baseUrl}}"], "path": ["restaurants", "1", "internal"] }
+          }
+        },
+        {
+          "name": "Update Restaurant Rating",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/restaurants/1/rating", "host": ["{{baseUrl}}"], "path": ["restaurants", "1", "rating"] },
+            "body": { "mode": "raw", "raw": "{\n  \"averageRating\": 4.5\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}

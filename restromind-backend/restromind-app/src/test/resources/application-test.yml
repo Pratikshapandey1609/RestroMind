@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/RestroMind
+    username: postgres
+    password: pratiksha
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    locations: classpath:db/migration/all
+    out-of-order: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+jwt:
+  secret: restromind-super-secret-key-change-in-production-min-32-chars
+  access-token-ttl-ms: 900000
+  refresh-token-ttl-ms: 604800000
