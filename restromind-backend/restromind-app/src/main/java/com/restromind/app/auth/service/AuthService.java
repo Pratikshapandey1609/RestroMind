@@ -1,24 +1,28 @@
 package com.restromind.app.auth.service;
 
-import com.restromind.app.auth.dto.AuthResponse;
-import com.restromind.app.auth.dto.LoginRequest;
-import com.restromind.app.auth.dto.RegisterRequest;
-import com.restromind.app.auth.entity.RefreshToken;
-import com.restromind.app.auth.entity.User;
-import com.restromind.app.auth.repository.RefreshTokenRepository;
-import com.restromind.app.auth.repository.UserRepository;
-import com.restromind.app.common.JwtUtil;
-import io.jsonwebtoken.Claims;
-import lombok.RequiredArgsConstructor;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.UUID;
+import com.restromind.app.auth.dto.AuthResponse;
+import com.restromind.app.auth.dto.ChangePasswordRequest;
+import com.restromind.app.auth.dto.LoginRequest;
+import com.restromind.app.auth.dto.RegisterRequest;
+import com.restromind.app.auth.dto.UpdateAccountRequest;
+import com.restromind.app.auth.entity.RefreshToken;
+import com.restromind.app.auth.entity.User;
+import com.restromind.app.auth.repository.RefreshTokenRepository;
+import com.restromind.app.auth.repository.UserRepository;
+import com.restromind.app.common.JwtUtil;
+
+import io.jsonwebtoken.Claims;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -77,6 +81,34 @@ public class AuthService {
     @Transactional
     public void logout(Long userId) {
         refreshTokenRepository.revokeAllByUserId(userId);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest req) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!passwordEncoder.matches(req.currentPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect");
+        }
+        user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+        userRepository.save(user);
+        // Revoke all refresh tokens — force re-login on all devices
+        refreshTokenRepository.revokeAllByUserId(userId);
+    }
+
+    @Transactional
+    public AuthResponse updateAccount(Long userId, UpdateAccountRequest req) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (req.fullName() != null) user.setFullName(req.fullName());
+        if (req.email() != null) {
+            if (userRepository.existsByEmail(req.email()) && !req.email().equals(user.getEmail())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+            }
+            user.setEmail(req.email());
+        }
+        userRepository.save(user);
+        return buildAuthResponse(user);
     }
 
     private AuthResponse buildAuthResponse(User user) {

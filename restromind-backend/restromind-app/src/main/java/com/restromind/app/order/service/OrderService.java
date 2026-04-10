@@ -18,6 +18,7 @@ import com.restromind.app.notification.service.NotificationService;
 import com.restromind.app.order.dto.CreateOrderRequest;
 import com.restromind.app.order.dto.OrderItemRequest;
 import com.restromind.app.order.dto.OrderItemResponse;
+import com.restromind.app.order.dto.OrderPrintResponse;
 import com.restromind.app.order.dto.OrderResponse;
 import com.restromind.app.order.dto.StatusHistoryResponse;
 import com.restromind.app.order.dto.UpdateStatusRequest;
@@ -115,14 +116,47 @@ public class OrderService {
     }
 
     public PageResponse<OrderResponse> getOrdersForRestaurant(Long restaurantId, Long ownerId, int page, int size) {
-        // Verify ownership
+        return getOrdersForRestaurantFiltered(restaurantId, ownerId, null, page, size);
+    }
+
+    public PageResponse<OrderResponse> getOrdersForRestaurantFiltered(Long restaurantId, Long ownerId,
+                                                                       String statusFilter, int page, int size) {
         restaurantRepository.findByOwnerId(ownerId)
             .filter(r -> r.getId().equals(restaurantId))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this restaurant"));
 
-        Page<Order> result = orderRepository.findByRestaurantIdOrderByCreatedAtDesc(
-            restaurantId, PageRequest.of(page, Math.min(size, 100)));
+        Page<Order> result;
+        if (statusFilter != null && !statusFilter.isBlank()) {
+            OrderStatus status;
+            try { status = OrderStatus.valueOf(statusFilter.toUpperCase()); }
+            catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status: " + statusFilter);
+            }
+            result = orderRepository.findByRestaurantIdAndStatusOrderByCreatedAtDesc(
+                restaurantId, status, PageRequest.of(page, Math.min(size, 100)));
+        } else {
+            result = orderRepository.findByRestaurantIdOrderByCreatedAtDesc(
+                restaurantId, PageRequest.of(page, Math.min(size, 100)));
+        }
         return toPageResponse(result, page, size);
+    }
+
+    public OrderPrintResponse getPrintView(Long orderId, Long requesterId, String role) {
+        Order order = findOrder(orderId);
+        if (!"ADMIN".equals(role) && !order.getUserId().equals(requesterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied");
+        }
+        var restaurant = restaurantRepository.findById(order.getRestaurantId()).orElse(null);
+        String restaurantName = restaurant != null ? restaurant.getName() : "Unknown";
+
+        List<OrderItemResponse> items = order.getItems().stream()
+            .map(i -> new OrderItemResponse(i.getDishId(), i.getDishName(),
+                i.getUnitPrice(), i.getQuantity(), i.getLineTotal()))
+            .toList();
+
+        return new OrderPrintResponse(order.getId(), restaurantName, order.getStatus().name(),
+            order.getCreatedAt(), order.getDeliveryAddress(), order.getSpecialInstructions(),
+            items, order.getSubtotal(), order.getDeliveryFee(), order.getGrandTotal());
     }
 
     public PageResponse<OrderResponse> getMyOrders(Long userId, int page, int size) {

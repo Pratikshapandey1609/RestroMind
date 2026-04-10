@@ -73,6 +73,30 @@
           }
         },
         {
+          "name": "Change Password (Settings)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/password", "host": ["{{baseUrl}}"], "path": ["auth", "password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword456\"\n}" }
+          }
+        },
+        {
+          "name": "Update Account Info (Settings)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/account", "host": ["{{baseUrl}}"], "path": ["auth", "account"] },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"email\": \"newemail@test.com\"\n}" }
+          }
+        },
+        {
           "name": "Logout",
           "request": {
             "method": "POST",
@@ -452,11 +476,27 @@
           }
         },
         {
-          "name": "Restaurant Orders (Admin)",
+          "name": "Restaurant Orders (Admin) — All",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": { "raw": "{{baseUrl}}/orders/restaurant/1?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["orders", "restaurant", "1"], "query": [{"key":"page","value":"0"},{"key":"size","value":"20"}] }
+          }
+        },
+        {
+          "name": "Restaurant Orders (Admin) — Filter by Status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/restaurant/1?status=PENDING&page=0&size=20", "host": ["{{baseUrl}}"], "path": ["orders", "restaurant", "1"], "query": [{"key":"status","value":"PENDING"},{"key":"page","value":"0"},{"key":"size","value":"20"}] }
+          }
+        },
+        {
+          "name": "Order Print View",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/1/print", "host": ["{{baseUrl}}"], "path": ["orders", "1", "print"] }
           }
         },
         {

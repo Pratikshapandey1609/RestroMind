@@ -82,15 +82,25 @@ public class OrderController {
     // ── Admin: Restaurant Orders ──────────────────────────────────────────────
 
     @Tag(name = "Orders")
-    @Operation(summary = "Get all orders for a restaurant (admin only)")
+    @Operation(summary = "Get all orders for a restaurant (admin only), optionally filtered by status")
     @GetMapping("/restaurant/{restaurantId}")
     public ResponseEntity<PageResponse<OrderResponse>> restaurantOrders(
             @PathVariable Long restaurantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String status,
             HttpServletRequest req) {
         return ResponseEntity.ok(
-            orderService.getOrdersForRestaurant(restaurantId, userId(req), page, size));
+            orderService.getOrdersForRestaurantFiltered(restaurantId, userId(req), status, page, size));
+    }
+
+    @Tag(name = "Orders")
+    @Operation(summary = "Get print-friendly order view (Order Detail with Print screen)")
+    @GetMapping("/{id}/print")
+    public ResponseEntity<com.restromind.app.order.dto.OrderPrintResponse> printOrder(
+            @PathVariable Long id,
+            HttpServletRequest req) {
+        return ResponseEntity.ok(orderService.getPrintView(id, userId(req), role(req)));
     }
 
     // ── Admin/User: Update Status ─────────────────────────────────────────────
